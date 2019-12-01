@@ -43,11 +43,22 @@ class policyDTS(Policy):
         self.nbActions = nbActions
         self.alphas = np.ones(self.nbActions) #initial alphsa and betas in the original paper of DTS is 2, but in Max's paper are 1, need to discuss.
         self.betas = np.ones(self.nbActions)
-        self.C = C #threshold, need to read more about it.
+        self.C = C #threshold,measure of how the algorithm reacts to non stationarity in the environment. needs to be tuned.
 
     def reset(self):
         self.alphas = np.ones(self.nbActions)
         self.betas = np.ones(self.nbActions)
 
     def decision(self):
+        #sample from the beta distributions. thetas should be of the shape of nbActions
+        thetas = np.random.beta(self.alphas, self.betas)
+        self.action = np.argmax(thetas)
+        return self.action
 
+    def getReward(self,reward):
+        self.alphas[self.action] += reward
+        self.betas[self.action] += 1 - reward
+        
+        if ((self.alphas[self.action] + self.betas[self.action]) > self.C):
+            self.alphas[self.action] *= self.C/(self.C + 1)
+            self.betas[self.action] *= self.C/(self.C + 1)
