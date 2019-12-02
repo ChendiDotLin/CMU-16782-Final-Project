@@ -1,10 +1,12 @@
 
 
 function[numofmoves, caught] = runtest()
+py.sys.path
 % add current folder to the python search path
-% if count(py.sys.path,'') == 0
-%     insert(py.sys.path,int32(0),'');
-% end
+if count(py.sys.path,'') == 0
+    disp("dfasdf")
+    insert(py.sys.path,int32(0),'');
+end
 
 mapfile = "map2.txt"; % define the txt file
 % wrapped_mapfile = py.textwrap.wrap(mapfile);
@@ -26,6 +28,7 @@ imagesc(envmap'); axis square; colorbar; colormap jet; hold on;
 %N is the number of steps in the plan 
 armplan_python = armplanner(mapfile, armstart, armgoal); 
 arm_plan = cellfun(@char,cell(armplan_python),'UniformOutput',false);
+arm_plan = arm_plan{1}
 fprintf(1, 'plan of length %d was found\n', size(armplan,1));
 
 %draw the plan
@@ -46,5 +49,5 @@ end
 
 function[armplan] = armplanner(envmap, armstart, armgoal)
 %call the planner in C
-armplan = py.rrt_planner.planner(envmap, armstart, armgoal);
+armplan = py.rrt_planner.planner(envmap, armstart, armgoal,2);
 end
