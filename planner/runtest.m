@@ -1,10 +1,9 @@
 
 
 function[numofmoves, caught] = runtest()
-py.sys.path
+
 % add current folder to the python search path
 if count(py.sys.path,'') == 0
-    disp("dfasdf")
     insert(py.sys.path,int32(0),'');
 end
 
@@ -19,9 +18,6 @@ envmap = load(mapfile);
 
 close all;
 
-%draw the environment
-figure('units','normalized','outerposition',[0 0 1 1]);
-imagesc(envmap'); axis square; colorbar; colormap jet; hold on;
 
 %armplan should be a matrix of D by N 
 %where D is the number of DOFs in the arm (length of armstart) and
@@ -30,6 +26,11 @@ armplan_python = armplanner(mapfile, armstart, armgoal);
 arm_plan = cellfun(@char,cell(armplan_python),'UniformOutput',false);
 arm_plan = arm_plan{1}
 fprintf(1, 'plan of length %d was found\n', size(armplan,1));
+
+
+%draw the environment
+figure('units','normalized','outerposition',[0 0 1 1]);
+imagesc(envmap'); axis square; colorbar; colormap jet; hold on;
 
 %draw the plan
 midx = size(envmap,2)/2;
@@ -49,5 +50,5 @@ end
 
 function[armplan] = armplanner(envmap, armstart, armgoal)
 %call the planner in C
-armplan = py.rrt_planner.planner(envmap, armstart, armgoal,2);
+armplan = py.rrt_planner.planner(envmap, armstart, armgoal);
 end

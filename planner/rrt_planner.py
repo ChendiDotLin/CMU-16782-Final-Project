@@ -53,7 +53,7 @@ def get_bresenham_parameters(p1x, p1y, p2x, p2y, params):
 	params.UsingYIndex = 0
 
 	if(abs(p2y-p1y)/(p2x-p1x) > 1):
-		params.UsingYIndex++
+		params.UsingYIndex+=1
 
 	if(params.UsingYIndex):
 		params.Y1 = p1x
@@ -113,7 +113,7 @@ def get_next_point(params):
 	return True
 
 def IsValidLineSegment(x0, y0, x1, y1, map, x_size, y_size):
-	bresenham_param_t params
+	params = bresenham_param_t()
 	nX = 0
 	nY = 0
 	nX0 = 0
@@ -296,7 +296,7 @@ def planner(env,start,goal,numofDOFs):
 		connect = False
 
 		if (k % 2 == 0):
-			ExtendStatus result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
+			result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
 
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
