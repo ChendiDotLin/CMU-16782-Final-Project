@@ -2,14 +2,13 @@ import numpy as np
 import enum
 import math
 import random
-import time
 
 class Node:
 	def __init__(self, numofDOFs):
-		self.arm_anglesV_rad = [0]*numofDOFs
+		self.arm_anglesV_rad = np.zeros(numofDOFs)
 		self.parent = None
 
-class ExtendStatus():
+class ExtendStatus(enum.Enum):
 	REACHED = 1
 	ADVANCED = 2
 	TRAPPED = 3
@@ -41,18 +40,19 @@ def ContXY2Cell(x, y, pX, pY, x_size, y_size):
 		pX = 0
 	if pX >= x_size:
 		pX = x_size - 1
+
 	pY = int(y/cellsize)
 	if y < 0:
 		pY = 0
 	if pY >= y_size:
 		pY = y_size - 1
+	print(pX,pY)
 	return pX, pY
-
 
 def get_bresenham_parameters(p1x, p1y, p2x, p2y, params):
 	params.UsingYIndex = 0
 
-	if ((p1x == p2x) or abs((p2y-p1y)/(p2x-p1x)) > 1):
+	if(abs(p2y-p1y)/(p2x-p1x) > 1):
 		params.UsingYIndex+=1
 
 	if(params.UsingYIndex):
@@ -124,14 +124,14 @@ def IsValidLineSegment(x0, y0, x1, y1, map, x_size, y_size):
 	if(x0 < 0 or x0 >= x_size or x1 < 0 or x1 >= x_size or y0 < 0 or y0 >= y_size or y1 < 0 or y1 >= y_size):
 		return False
 
-	nX0, nY0 = ContXY2Cell(x0, y0, nX0, nY0, x_size, y_size)
-	nX1, nY1 = ContXY2Cell(x1, y1, nX1, nY1, x_size, y_size)
+	nX0, nY0 = ContXY2Cell(x0, y0, nX0. nY0, x_size, y_size)
+	nX1, nY1 = ContXY2Cell(x1, y1, nX1. nY1, x_size, y_size)
 
 	get_bresenham_parameters(nX0, nY0, nX1, nY1, params)
 
 	while True:
 		nX, nY = get_current_point(params, nX, nY)
-		if(map[nX][nY] == 1):
+		if(map[GETMAPINDEX(nX,nY,x_size,y_size)] == 1):
 			return False
 		if not get_next_point(params):
 			break
@@ -174,8 +174,7 @@ def findNearest(q_rand, node_list, numofDOFs):
 		if dist < min_dist:
 			min_dist = dist
 			min_dist_index = i
-	#print(min_dist_index)
-	#print(len(node_list))
+
 	q_near = node_list[min_dist_index]
 	return q_near
 
@@ -192,10 +191,10 @@ def newConfig(q_rand, q_near, q_new, step_size, interpolate_times, numofDOFs, ma
 	if connect == True:
 		for i in range(numofSamples):
 			for j in range(numofDOFs):
-				new_angles.arm_anglesV_rad[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
-			if(IsValidArmConfiguration(new_angles.arm_anglesV_rad, numofDOFs, map, x_size, y_size)):
+				new_angles[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
+			if(IsValidArmConfiguration(new_angles, numofDOFs, map, x_size, y_size)):
 				for k in range(numofDOFs):
-					q_new.arm_anglesV_rad[k] = new_angles.arm_anglesV_rad[k]
+					q_new.arm_anglesV_rad[k] = new_angles[k]
 				flag = True
 			else:
 				break
@@ -203,20 +202,20 @@ def newConfig(q_rand, q_near, q_new, step_size, interpolate_times, numofDOFs, ma
 		if numofSamples > interpolate_times:
 			for i in range(interpolate_times):
 				for j in range(numofDOFs):
-					new_angles.arm_anglesV_rad[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
-				if(IsValidArmConfiguration(new_angles.arm_anglesV_rad, numofDOFs, map, x_size, y_size)):
+					new_angles[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
+				if(IsValidArmConfiguration(new_angles, numofDOFs, map, x_size, y_size)):
 					for k in range(numofDOFs):
-						q_new.arm_anglesV_rad[k] = new_angles.arm_anglesV_rad[k]
+						q_new.arm_anglesV_rad[k] = new_angles[k]
 					flag = True
 				else:
 					break
 		else:
 			for i in range(numofSamples):
 				for j in range(numofDOFs):
-					new_angles.arm_anglesV_rad[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
-				if(IsValidArmConfiguration(new_angles.arm_anglesV_rad, numofDOFs, map, x_size, y_size)):
+					new_angles[j] = q_near.arm_anglesV_rad[j] + (i+1)/numofSamples * (q_rand.arm_anglesV_rad[j] - q_near.arm_anglesV_rad[j])
+				if(IsValidArmConfiguration(new_angles, numofDOFs, map, x_size, y_size)):
 					for k in range(numofDOFs):
-						q_new.arm_anglesV_rad[k] = new_angles.arm_anglesV_rad[k]
+						q_new.arm_anglesV_rad[k] = new_angles[k]
 					flag = True
 				else:
 					break
@@ -254,14 +253,13 @@ def extend(q, q_new, node_list, step_size, interpolate_times, numofDOFs, map, x_
 
 def planner(env,start,goal):	 
 	#print(env[0])
-	print(start)
-	print(goal)
 	map = np.loadtxt(env)
 	x_size = map.shape[0]
 	y_size = map.shape[1]
 	numofDOFs = len(start)
 	# print(numofDOFs)
 	# print(numofDOFs)
+	print("fasdfas")
 	if not IsValidArmConfiguration(start, numofDOFs, map, x_size, y_size):
 		print("arm start configuration is invalid. Please change another one.")
 		return
@@ -284,8 +282,6 @@ def planner(env,start,goal):
 	node_list_forward = []
 	node_list_backward = []
 	planned_path = []
-	node_list_forward.append(q_start)
-	node_list_backward.append(q_goal)
 
 	step_size = math.pi/90
 	interpolate_times = 10
@@ -310,12 +306,12 @@ def planner(env,start,goal):
 				result_1 = ExtendStatus()
 
 				while True:
-					result_1 = extend(q_new, q_new_backward, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size,connect)
+					result_1 = extend(q_new, q_new_backward, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size)
 					if(result_1 != ExtendStatus.ADVANCED):
 						break
 
 				if(reached(q_new, q_new_backward, numofDOFs)):
-					#q_new.parent = q_new_backward
+					q_new.parent = q_new_backward
 					node_list_backward.append(q_new)
 
 					while True:
@@ -340,19 +336,19 @@ def planner(env,start,goal):
 					break
 
 		else:
-			result = extend(q_rand, q_new, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
+			result = extend(q_rand, q_new, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size)
 
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
 				result_1 = ExtendStatus()
 
 				while True:
-					result_1 = extend(q_new, q_new_forward, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
+					result_1 = extend(q_new, q_new_forward, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size)
 					if(result_1 != ExtendStatus.ADVANCED):
 						break
 
 				if(reached(q_new, q_new_forward, numofDOFs)):
-					#q_new.parent = q_new_forward
+					q_new.parent = q_new_forward
 					node_list_forward.append(q_new)
 
 					while True:
@@ -400,11 +396,10 @@ def planner(env,start,goal):
 
 	print("number of nodes generated ", len(node_list_forward) + len(node_list_backward))
 
-	plan = [i.arm_anglesV_rad for i in planned_path]
-	print(plan)
-	return plan
+	return planned_path
+
 
 
 
 if __name__ == "__main__":
-    planner("map2.txt",[0,0],[1,1])
+    pass
