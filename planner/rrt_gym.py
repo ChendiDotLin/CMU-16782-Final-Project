@@ -56,7 +56,7 @@ class RRT(object):
 
         self.step_size = math.pi / 90
         self.interpolate_times = 10
-        self.max_expand_times = 100000
+        self.max_expand_times = 8000
 
         # used in state representation
         self.neighboring_distance = 10
@@ -79,8 +79,11 @@ class RRT(object):
 
         self.cal_cost_flag = True
         self.done = False
+        self.goal_reached = False
 
         self.q_new = [0,] * self.numofDOFs
+
+        self.expand_times = 0
 
         return self.state
 
@@ -177,6 +180,7 @@ class RRT(object):
                             break
                     #break
                     self.done = True
+                    self.goal_reached = True
         else:
             result = self.extend(q_rand, q_new, self.node_list_backward, self.step_size, self.interpolate_times,
                                  self.numofDOFs, self.map, self.x_size, self.y_size, connect)
@@ -215,6 +219,7 @@ class RRT(object):
                         else:
                             break
                     self.done = True
+                    self.goal_reached = True
 
         # end_time = time.time()
         # planning_time = end_time - start_time
@@ -222,10 +227,15 @@ class RRT(object):
         #     print("We did not find the path under the upper limit time ", upper_limit_time)
         #     cal_cost_flag = False
         #     break
+        self.expand_times += 1
+        if self.expand_times >= self.max_expand_times:
+            self.done = True
 
+        # calc reward
+        reward = (1000 * self.goal_reached) / self.expand_times
 
         # current reward function: binary reward of whether goal is reached
-        return self.state, 1 * self.done, self.done, ""
+        return self.state, reward, self.done, "goal reached" if (self.goal_reached == True) else "failed"
 
     def calc_cost(self):
         cost = 0
@@ -243,7 +253,6 @@ class RRT(object):
     @property
     def plan(self):
         plan = [i.arm_anglesV_rad for i in self.planned_path]
-        print(plan)
         return plan
 
     @property

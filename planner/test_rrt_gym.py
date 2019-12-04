@@ -14,8 +14,8 @@ cnt = 0
 
 while not done:
     action = 1 * (cnt % 2 == 0) # alternating action now
-    print(state)
     state, reward, done, _ = planner.step(action)
+    print(reward)
     cnt += 1
 
 plan = planner.plan
