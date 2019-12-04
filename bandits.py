@@ -9,6 +9,7 @@ class Policy:
         pass
     def getReward(self,reward):
         pass
+        # we will need to revise the rrt planner so that we can make one single step in rrt connect instead of solving the whole problem
 
 class policyUCB(Policy):
     def init(self, nbActions):
