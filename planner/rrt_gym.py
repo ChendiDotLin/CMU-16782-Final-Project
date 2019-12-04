@@ -58,6 +58,9 @@ class RRT(object):
         self.interpolate_times = 10
         self.max_expand_times = 100000
 
+        # used in state representation
+        self.neighboring_distance = 10
+
         self.reset()
 
     def reset(self):
@@ -77,17 +80,56 @@ class RRT(object):
         self.cal_cost_flag = True
         self.done = False
 
+        self.q_new = [0,] * self.numofDOFs
+
         return self.state
 
+
+    # state representation for RL:
+    # [goal, q_new, N_neighbors_forward, N_neighbors_backward,
+    # D_nearest_neighbor_forward, D_nearest_neightbor_backward,
+    # Length_forward, Length_backward]
     @property
     def state(self):
-        return 0
+        state = []
+        state.extend(self.goal)
+        state.extend(self.q_new)
+
+        # number of neighboring pnts within self.neighboring_distance in two trees
+        N_neighbors_forward = 0
+        N_neighbors_backward = 0
+        # distance to closest pnt in two trees
+        D_nearest_neighbor_forward = 100
+        D_nearest_neightbor_backward = 100
+
+        for i in range(len(self.node_list_forward)):
+            node = self.node_list_forward[i].arm_anglesV_rad
+            dis = np.linalg.norm(np.array(node) - np.array(self.q_new))
+            if dis < self.neighboring_distance:
+                N_neighbors_forward += 1
+            D_nearest_neighbor_forward = min(D_nearest_neighbor_forward, dis)
+
+        for i in range(len(self.node_list_backward)):
+            node = self.node_list_backward[i].arm_anglesV_rad
+            dis = np.linalg.norm(np.array(node) - np.array(self.q_new))
+            if dis < self.neighboring_distance:
+                N_neighbors_backward += 1
+            D_nearest_neightbor_backward = min(D_nearest_neightbor_backward, dis)
+
+        state.extend([N_neighbors_forward, N_neighbors_backward, D_nearest_neighbor_forward, D_nearest_neightbor_backward])
+
+        # also append the length of the forward/backward tree
+        state.append(len(self.node_list_forward))
+        state.append(len(self.node_list_backward))
+        return state
 
     # action should be [0, 1]. 0: expand from the start tree; 1: expand from the goal tree
     def step(self, action):
         assert (action == 0 or action == 1)
 
         q_rand = self.getRandomNode(self.numofDOFs)
+
+        self.q_new = q_rand.arm_anglesV_rad
 
         q_new = Node(self.numofDOFs)
         q_new_forward = Node(self.numofDOFs)
