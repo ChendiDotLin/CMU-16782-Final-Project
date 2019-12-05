@@ -3,6 +3,9 @@ import enum
 import math
 import random
 import time
+import bandits
+
+pi = 3.1416926535897
 
 class Node:
 	def __init__(self, numofDOFs):
@@ -165,7 +168,7 @@ def getRandomNode(numofDOFs):
 
 def findNearest(q_rand, node_list, numofDOFs):
 	min_dist_index = 0
-	min_dist = math.inf
+	min_dist = np.Inf
 	for i in range(len(node_list)):
 		dist = 0
 		for j in range(numofDOFs):
@@ -252,10 +255,12 @@ def extend(q, q_new, node_list, step_size, interpolate_times, numofDOFs, map, x_
 		return ExtendStatus.TRAPPED
 
 
-def planner(env,start,goal):	 
+def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):	 
 	#print(env[0])
 	print(start)
 	print(goal)
+	random.seed(1)
+
 	map = np.loadtxt(env)
 	x_size = map.shape[0]
 	y_size = map.shape[1]
@@ -272,7 +277,7 @@ def planner(env,start,goal):
 	start_time = time.time()
 	#end_time = time.time()
 	#print end_time - start_time
-	upper_limit_time = 30
+	upper_limit_time = 300
 
 	q_start = Node(numofDOFs)
 	q_goal = Node(numofDOFs)
@@ -284,15 +289,24 @@ def planner(env,start,goal):
 	node_list_forward = []
 	node_list_backward = []
 	planned_path = []
+	forward_selected = 0
+	backward_selected = 0
 	node_list_forward.append(q_start)
 	node_list_backward.append(q_goal)
 
 	step_size = math.pi/90
 	interpolate_times = 10
 	max_expand_times = 100000
-
 	cal_cost_flag = True
+	# policy = bandits.Policy()
+	if (policy_flag=="UCB"):
+		policy = bandits.policyUCB(2)
+	else: 
+		policy = bandits.policyDTS(2)
+	# print(ucb.nbActions)
 
+	# dts = bandits.policyDTS(policy)
+    
 	for k in range(max_expand_times):
 		q_rand = getRandomNode(numofDOFs)
 
@@ -301,10 +315,27 @@ def planner(env,start,goal):
 		q_new_backward = Node(numofDOFs)
 
 		connect = False
-
-		if (k % 2 == 0):
+		if(bandit_flag==1):
+			treeidx = policy.decision()
+		else:
+			treeidx = k%2
+		# if (k>1):
+		# 	print(policy.action)
+		# if (policy.decision() == 0):
+			# print(policy.action)
+		if(treeidx==0):
+			forward_selected += 1
 			result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
+			if (result==ExtendStatus.REACHED):
+				reward  = 0.1
+			elif(result==ExtendStatus.ADVANCED):
+				reward = 0.4
+			else:
+				reward = 0.9
 
+			if(bandit_flag==1):
+				policy.getReward(reward)
+			
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
 				result_1 = ExtendStatus()
@@ -317,7 +348,7 @@ def planner(env,start,goal):
 				if(reached(q_new, q_new_backward, numofDOFs)):
 					#q_new.parent = q_new_backward
 					node_list_backward.append(q_new)
-
+                
 					while True:
 						if(q_new.parent != None):
 							planned_path.append(q_new)
@@ -340,7 +371,18 @@ def planner(env,start,goal):
 					break
 
 		else:
+			backward_selected += 1
 			result = extend(q_rand, q_new, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
+			if (result==ExtendStatus.REACHED):
+				reward  = 0.1
+			elif(result==ExtendStatus.ADVANCED):
+				reward = 0.4
+			else:
+				reward = 0.9
+			
+			if(bandit_flag==1):
+				policy.getReward(reward)
+
 
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
@@ -399,12 +441,24 @@ def planner(env,start,goal):
 		print("We find the path and the planning time is ", planning_time)
 
 	print("number of nodes generated ", len(node_list_forward) + len(node_list_backward))
+	print("forward tree selection percentage", forward_selected/(forward_selected + backward_selected)*100)
+	print("backward tree selection percentage", backward_selected/(forward_selected + backward_selected)*100)
 
 	plan = [i.arm_anglesV_rad for i in planned_path]
-	print(plan)
-	return plan
+	# print(plan)
+	return plan,len(node_list_forward) + len(node_list_backward)
 
 
 
 if __name__ == "__main__":
-    planner("map2.txt",[0,0],[1,1])
+	res = 0
+	for i in range(1):
+		# plan,expansion = planner("map2.txt",[0,0],[1,1])
+		# plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
+		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],0)
+		
+
+		res += expansion
+	# res /=50
+	print(res)
+	print(len(plan))
