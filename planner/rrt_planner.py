@@ -289,6 +289,8 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 	node_list_forward = []
 	node_list_backward = []
 	planned_path = []
+	forward_selected = 0
+	backward_selected = 0
 	node_list_forward.append(q_start)
 	node_list_backward.append(q_goal)
 
@@ -322,6 +324,7 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 		# if (policy.decision() == 0):
 			# print(policy.action)
 		if(treeidx==0):
+			forward_selected += 1
 			result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
 			if (result==ExtendStatus.REACHED):
 				reward  = 0.1
@@ -368,6 +371,7 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 					break
 
 		else:
+			backward_selected += 1
 			result = extend(q_rand, q_new, node_list_backward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
 			if (result==ExtendStatus.REACHED):
 				reward  = 0.1
@@ -437,6 +441,8 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 		print("We find the path and the planning time is ", planning_time)
 
 	print("number of nodes generated ", len(node_list_forward) + len(node_list_backward))
+	print("forward tree selection percentage", forward_selected/(forward_selected + backward_selected)*100)
+	print("backward tree selection percentage", backward_selected/(forward_selected + backward_selected)*100)
 
 	plan = [i.arm_anglesV_rad for i in planned_path]
 	# print(plan)
@@ -449,7 +455,7 @@ if __name__ == "__main__":
 	for i in range(1):
 		# plan,expansion = planner("map2.txt",[0,0],[1,1])
 		# plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
-		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],1)
+		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],0)
 		
 
 		res += expansion
