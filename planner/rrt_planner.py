@@ -455,9 +455,9 @@ if __name__ == "__main__":
 	res = 0
 	res_forward_percentage = 0
 	for i in range(20):
-		# plan,expansion = planner("map2.txt",[0,0],[1,1])
-		# plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
-		plan,expansion,forward_percentage = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],1,"DTS")
+		# plan,expansion,forward_percentage = planner("map2.txt",[0,0],[1,1],1)
+		# plan,expansion,forward_percentage = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
+		plan,expansion,forward_percentage = planner("map2.txt"	,[pi/8, 3*pi/4, pi],[pi/10, pi/4, pi/2],1)
 		res += expansion
 		res_forward_percentage += forward_percentage
 
