@@ -5,6 +5,8 @@ import random
 import time
 import bandits
 
+pi = 3.1416926535897
+
 class Node:
 	def __init__(self, numofDOFs):
 		self.arm_anglesV_rad = [0]*numofDOFs
@@ -257,6 +259,8 @@ def planner(env,start,goal):
 	#print(env[0])
 	print(start)
 	print(goal)
+	random.seed(1)
+
 	map = np.loadtxt(env)
 	x_size = map.shape[0]
 	y_size = map.shape[1]
@@ -273,7 +277,7 @@ def planner(env,start,goal):
 	start_time = time.time()
 	#end_time = time.time()
 	#print end_time - start_time
-	upper_limit_time = 30
+	upper_limit_time = 300
 
 	q_start = Node(numofDOFs)
 	q_goal = Node(numofDOFs)
@@ -310,7 +314,8 @@ def planner(env,start,goal):
 
 		connect = False
 
-
+		# if (k>1):
+		# 	print(policy.action)
 		if (policy.decision() == 0):
 			# print(policy.action)
 		# if(k%2==0):
@@ -429,15 +434,20 @@ def planner(env,start,goal):
 	print("number of nodes generated ", len(node_list_forward) + len(node_list_backward))
 
 	plan = [i.arm_anglesV_rad for i in planned_path]
-	print(plan)
+	# print(plan)
 	return plan,len(node_list_forward) + len(node_list_backward)
 
 
 
 if __name__ == "__main__":
 	res = 0
-	for i in range(50):
-		plan,expansion = planner("map2.txt",[0,0],[1,1])
+	for i in range(1):
+		# plan,expansion = planner("map2.txt",[0,0],[1,1])
+		# plan,expansion = planner("map2.txt"	,[0, 0, pi/2, pi/2, pi/2],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
+		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi])
+		
+
 		res += expansion
-	res /=50
+	# res /=50
 	print(res)
+	print(len(plan))

@@ -16,7 +16,7 @@ class policyUCB(Policy):
         self.estimateSum = np.zeros(self.nbActions)
         self.counter = np.zeros(self.nbActions)
         self.steps = 0
-        self.alpha = 1
+        self.alpha = 1    
         
     def reset(self):
         self.estimateSum = np.zeros(self.nbActions)
@@ -39,7 +39,7 @@ class policyUCB(Policy):
         return
 
 class policyDTS(Policy):
-    def __init__(self, nbActions=2, C=1):
+    def __init__(self, nbActions=2, C=0.5):
         self.nbActions = nbActions
         self.alphas = np.ones(self.nbActions) #initial alphsa and betas in the original paper of DTS is 2, but in Max's paper are 1, need to discuss.
         self.betas = np.ones(self.nbActions)

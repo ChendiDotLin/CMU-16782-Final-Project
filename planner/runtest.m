@@ -8,17 +8,17 @@ clear all;
 clc;
 close all;
 
-if count(py.sys.path,'') == 0
-    insert(py.sys.path,int32(0),'');
-end
+% if count(py.sys.path,'') == 0
+%     insert(py.sys.path,int32(0),'');
+% end
 
-mapfile = "map2.txt"; % define the txt file
+mapfile = "map1.txt"; % define the txt file
 % wrapped_mapfile = py.textwrap.wrap(mapfile);
 % wrapped_mapfile = "map2.txt";
-% armstart = py.list({pi/2, pi/4, pi/2, pi/4, pi/2}); % define start as a python list
-% armgoal = py.list({pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi}); % define goal as a python list
-armstart = py.list({0,0}); % define start as a python list
-armgoal = py.list({1,1}); % define goal as a python list
+armstart = py.list({pi/2, pi/4, pi/2, pi/4, pi/2}); % define start as a python list
+armgoal = py.list({pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi}); % define goal as a python list
+% armstart = py.list({0,0}); % define start as a python list
+% armgoal = py.list({1,1}); % define goal as a python list
 LINKLENGTH_CELLS=10;
 envmap = load(mapfile);
 
