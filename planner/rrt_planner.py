@@ -311,9 +311,9 @@ def planner(env,start,goal):
 		connect = False
 
 
-		# if (policy.decision() == 0):
+		if (policy.decision() == 0):
 			# print(policy.action)
-		if(k%2==0):
+		# if(k%2==0):
 			result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
 			if (result==ExtendStatus.REACHED):
 				reward  = 0.1
@@ -322,7 +322,7 @@ def planner(env,start,goal):
 			else:
 				reward = 0.9
 
-			# policy.getReward(reward)
+			policy.getReward(reward)
 			
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
@@ -367,7 +367,7 @@ def planner(env,start,goal):
 			else:
 				reward = 0.9
 
-			# policy.getReward(reward)
+			policy.getReward(reward)
 
 
 			if(result != ExtendStatus.TRAPPED):
