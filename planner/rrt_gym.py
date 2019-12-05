@@ -56,7 +56,7 @@ class RRT(object):
 
         self.step_size = math.pi / 90
         self.interpolate_times = 10
-        self.max_expand_times = 8000
+        self.max_expand_times = 12000
 
         # used in state representation
         self.neighboring_distance = 10
@@ -89,12 +89,14 @@ class RRT(object):
 
 
     # state representation for RL:
-    # [goal, q_new, N_neighbors_forward, N_neighbors_backward,
+    # [start, goal, q_new, N_neighbors_forward, N_neighbors_backward,
     # D_nearest_neighbor_forward, D_nearest_neightbor_backward,
-    # Length_forward, Length_backward]
+    # Length_forward, Length_backward,
+    # var_forward, var_backward]
     @property
     def state(self):
         state = []
+        state.extend(self.start)
         state.extend(self.goal)
         state.extend(self.q_new)
 
@@ -124,6 +126,12 @@ class RRT(object):
         # also append the length of the forward/backward tree
         state.append(len(self.node_list_forward))
         state.append(len(self.node_list_backward))
+
+        # variance of nodes in each tree
+        # var_forward = np.var([_.arm_anglesV_rad for _ in self.node_list_forward], axis=0)
+        # state.extend(var_forward.tolist())
+        # var_backward = np.var([_.arm_anglesV_rad for _ in self.node_list_backward], axis=0)
+        # state.extend(var_backward.tolist())
         return state
 
     # action should be [0, 1]. 0: expand from the start tree; 1: expand from the goal tree
