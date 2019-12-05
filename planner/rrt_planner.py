@@ -259,7 +259,7 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 	#print(env[0])
 	print(start)
 	print(goal)
-	random.seed(1)
+	# random.seed(1)
 
 	map = np.loadtxt(env)
 	x_size = map.shape[0]
@@ -443,22 +443,26 @@ def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):
 	print("number of nodes generated ", len(node_list_forward) + len(node_list_backward))
 	print("forward tree selection percentage", forward_selected/(forward_selected + backward_selected)*100)
 	print("backward tree selection percentage", backward_selected/(forward_selected + backward_selected)*100)
+	print('\n')
 
 	plan = [i.arm_anglesV_rad for i in planned_path]
 	# print(plan)
-	return plan,len(node_list_forward) + len(node_list_backward)
+	return plan,len(node_list_forward) + len(node_list_backward), forward_selected/(forward_selected + backward_selected)*100
 
 
 
 if __name__ == "__main__":
 	res = 0
-	for i in range(1):
+	res_forward_percentage = 0
+	for i in range(20):
 		# plan,expansion = planner("map2.txt",[0,0],[1,1])
 		# plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
-		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],0)
-		
-
+		plan,expansion,forward_percentage = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],1,"DTS")
 		res += expansion
-	# res /=50
-	print(res)
+		res_forward_percentage += forward_percentage
+
+	res_forward_percentage /= 20
+	res /= 20
+	print("mean expanded nodes", res)
+	print("mean forward tree expansion", res_forward_percentage)
 	print(len(plan))

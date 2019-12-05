@@ -39,7 +39,7 @@ class policyUCB(Policy):
         return
 
 class policyDTS(Policy):
-    def __init__(self, nbActions=2, C=0.5):
+    def __init__(self, nbActions=2, C=1):
         self.nbActions = nbActions
         self.alphas = np.ones(self.nbActions) #initial alphsa and betas in the original paper of DTS is 2, but in Max's paper are 1, need to discuss.
         self.betas = np.ones(self.nbActions)
