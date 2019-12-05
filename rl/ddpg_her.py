@@ -28,6 +28,8 @@ import pprint as pp
 from replay_buffer import ReplayBuffer
 from math import pi
 
+import scipy.io
+
 EPSILON = 0.2
 MU = 0
 SIGMA = 0.05
@@ -323,30 +325,9 @@ def evaluate(env, actor, num_episodes, full_output=True):
             step += 1
         success_vec.append(success)
         test_rewards.append(total_reward)
-        if i < 9:
-            plt.subplot(3, 3, i+1)
-            s_vec = np.array(s_vec)
-            pusher_vec = s_vec[:, :2]
-            puck_vec = s_vec[:, 2:4]
-            goal_vec = s_vec[:, 4:]
-            plt.plot(pusher_vec[:, 0], pusher_vec[:, 1], '-o', label='pusher')
-            plt.plot(puck_vec[:, 0], puck_vec[:, 1], '-o', label='puck')
-            plt.plot(goal_vec[:, 0], goal_vec[:, 1], '*', label='goal', markersize=10)
-            plt.plot([0, 5, 5, 0, 0], [0, 0, 5, 5, 0], 'k-', linewidth=3)
-            plt.fill_between([-1, 6], [-1, -1], [6, 6], alpha=0.1,
-                             color='g' if success else 'r')
-            plt.xlim([-1, 6])
-            plt.ylim([-1, 6])
-            if i == 0:
-                plt.legend(loc='lower left', fontsize=28, ncol=3, bbox_to_anchor=(0.1, 1.0))
-            if i == 8:
-                # Comment out the line below to disable plotting.
-#                    plt.show()
-                plt.close()
-                pass
     if full_output:
-        return success_vec, test_rewards
-    return np.mean(success_vec), np.mean(test_rewards)
+        return success_vec, test_rewards, env.plan, env.expand_times
+    return np.mean(success_vec), np.mean(test_rewards), env.plan, env.num_of_nodes
 # ===========================
 #   Agent Training
 # ===========================
@@ -453,14 +434,14 @@ def train(sess, env, args, actor, critic, actor_noise):
             if terminal:
                 summary_str = sess.run(summary_ops, feed_dict={
                     summary_vars[0]: ep_reward,
-                    summary_vars[1]: ep_ave_max_q / float(j)
+                    summary_vars[1]: ep_ave_max_q / float(j+1)
                 })
 
                 writer.add_summary(summary_str, i)
                 writer.flush()
 
                 print('| Reward: {:.3f} | Episode: {:d} | Qmax: {:.4f}'.format(ep_reward, \
-                                                                             i, (ep_ave_max_q / float(j))))
+                                                                             i, (ep_ave_max_q / float(j+1))))
                 break
 
         if HER:
@@ -493,13 +474,20 @@ def train(sess, env, args, actor, critic, actor_noise):
         del store_states, store_actions
         store_states, store_actions = [], []
 
-        if i % 30 == 0:
-            success_vec, rewards_vec = evaluate(env, actor, 10)
+        if i % 3 == 0:
+            success_vec, rewards_vec, plan, n_expand = evaluate(env, actor, 1)
             eval_success.append(success_vec)
             eval_reward.append(rewards_vec)
             print('\tEvaluation: success = %.2f; return = %.2f' % (np.mean(success_vec), np.mean(rewards_vec)))
             np.savez("logs/ddpg_HER={}_time=baseline.npz".format(False),
                      successes=eval_success, mean_rewards=eval_reward)
+            # save the plan
+            # in matlab format
+            if np.sum(success_vec) > 0:
+                scipy.io.savemat("results/EvaluationPlan_Expanded={}_Iter={}.mat".format(n_expand, i), dict(x=plan))
+                np.savetxt("results/EvaluationPlan_Expanded={}_Iter={}.txt".format(n_expand, i), plan)
+
+
             plt.figure()
             mean = np.array([np.mean(_) for _ in eval_reward])
             std = np.array([np.std(_) for _ in eval_reward])
@@ -527,10 +515,13 @@ def train(sess, env, args, actor, critic, actor_noise):
 
 def main(args):
     with tf.Session() as sess:
-        start = [pi / 2, pi / 4, pi / 2, pi / 4, pi / 2]
-        goal = [pi / 8, 3 * pi / 4, pi, 0.9 * pi, 1.5 * pi]
+        #start = [pi/10, pi/4, pi/2]
+        start = [pi/10, pi/4, pi/2]
+        goal = [pi/8, 3*pi/4, pi]
+        start = [0, 0]
+        goal = [1, 1]
 
-        env = RRT("../planner/map1.txt", start, goal)
+        env = RRT("../planner/map2.txt", start, goal)
 
         # np.random.seed(int(args['random_seed']))
         # tf.set_random_seed(int(args['random_seed']))
