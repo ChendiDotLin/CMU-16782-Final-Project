@@ -255,7 +255,7 @@ def extend(q, q_new, node_list, step_size, interpolate_times, numofDOFs, map, x_
 		return ExtendStatus.TRAPPED
 
 
-def planner(env,start,goal):	 
+def planner(env,start,goal,bandit_flag=0,policy_flag="UCB"):	 
 	#print(env[0])
 	print(start)
 	print(goal)
@@ -295,12 +295,12 @@ def planner(env,start,goal):
 	step_size = math.pi/90
 	interpolate_times = 10
 	max_expand_times = 100000
-
 	cal_cost_flag = True
 	# policy = bandits.Policy()
-	policy = bandits.policyUCB(2)
-	# or 
-	# policy = bandits.policyDTS(2)
+	if (policy_flag=="UCB"):
+		policy = bandits.policyUCB(2)
+	else: 
+		policy = bandits.policyDTS(2)
 	# print(ucb.nbActions)
 
 	# dts = bandits.policyDTS(policy)
@@ -313,12 +313,15 @@ def planner(env,start,goal):
 		q_new_backward = Node(numofDOFs)
 
 		connect = False
-
+		if(bandit_flag==1):
+			treeidx = policy.decision()
+		else:
+			treeidx = k%2
 		# if (k>1):
 		# 	print(policy.action)
-		if (policy.decision() == 0):
+		# if (policy.decision() == 0):
 			# print(policy.action)
-		# if(k%2==0):
+		if(treeidx==0):
 			result = extend(q_rand, q_new, node_list_forward, step_size, interpolate_times, numofDOFs, map, x_size, y_size, connect)
 			if (result==ExtendStatus.REACHED):
 				reward  = 0.1
@@ -327,7 +330,8 @@ def planner(env,start,goal):
 			else:
 				reward = 0.9
 
-			policy.getReward(reward)
+			if(bandit_flag==1):
+				policy.getReward(reward)
 			
 			if(result != ExtendStatus.TRAPPED):
 				connect = True
@@ -371,8 +375,9 @@ def planner(env,start,goal):
 				reward = 0.4
 			else:
 				reward = 0.9
-
-			policy.getReward(reward)
+			
+			if(bandit_flag==1):
+				policy.getReward(reward)
 
 
 			if(result != ExtendStatus.TRAPPED):
@@ -443,8 +448,8 @@ if __name__ == "__main__":
 	res = 0
 	for i in range(1):
 		# plan,expansion = planner("map2.txt",[0,0],[1,1])
-		# plan,expansion = planner("map2.txt"	,[0, 0, pi/2, pi/2, pi/2],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
-		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi])
+		# plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2, pi/2, pi],[pi/8, 3*pi/4, pi, 0.9*pi, 1.5*pi])
+		plan,expansion = planner("map2.txt"	,[pi/10, pi/4, pi/2],[pi/8, 3*pi/4, pi],1)
 		
 
 		res += expansion
